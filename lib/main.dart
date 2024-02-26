@@ -1,18 +1,25 @@
-import 'dart:io';
 
+import 'package:adaptive_app/src/adaptive_login.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:provider/provider.dart';
 
 import 'src/adaptive_playlists.dart';
 import 'src/app_state.dart';
 import 'src/playlist_details.dart';
 
-// From https://www.youtube.com/channel/UCwXdFgeE9KYzlDdR7TG9cMw
-const flutterDevAccountId = 'UCwXdFgeE9KYzlDdR7TG9cMw';
+final scopes = [
+  'https://www.googleapis.com/auth/youtube.readonly',
+  //'https://www.youtube.com/channel/UCwXdFgeE9KYzlDdR7TG9cMw',
+];
 
-const youTubeApiKey = 'AIzaSyDx0dCXnK74KhyBV2CCyidWK_wKsXdMVRM';
+final clientId = ClientId(
+  '316226658330-jk2irf4khhqedadto8ojcjt7p9ao610u.apps.googleusercontent.com',
+  //'316226658330-8bsl7g32andje7hrkjcl5efemvbg5ucs.apps.googleusercontent.com',
+  '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',
+);
 
 final _router = GoRouter(
   routes: <RouteBase>[
@@ -21,7 +28,28 @@ final _router = GoRouter(
       builder: (context, state) {
         return const AdaptivePlaylists();
       },
+      redirect: (context, state)
+      {
+        if(!context.read<AuthedUserPlaylists>().isLoggedIn)
+        {
+          return '/login';
+        }else
+        {
+          return null;
+        }
+      },
       routes: <RouteBase>[
+        GoRoute(
+          path: 'login',
+          builder: (context, state)
+          {
+            return AdaptiveLogin(
+              clientId: clientId, 
+              scopes: scopes, 
+              loginButtonChild: const Text('Login to YouTube!'),
+            );
+          },
+        ),
         GoRoute(
           path: 'playlist/:id',
           builder: (context, state) {
@@ -42,16 +70,9 @@ final _router = GoRouter(
 );
 
 void main() {
-  if (youTubeApiKey == 'AIzaNotAnApiKey') {
-    print('youTubeApiKey has not been configured.');
-    exit(1);
-  }
-
-  runApp(ChangeNotifierProvider<FlutterDevPlaylists>(
-    create: (context) => FlutterDevPlaylists(
-      flutterDevAccountId: flutterDevAccountId,
-      youTubeApiKey: youTubeApiKey,
-    ),
+  runApp(ChangeNotifierProvider<AuthedUserPlaylists>(
+    
+    create: (context) => AuthedUserPlaylists(),
     child: const PlaylistsApp(),
   ));
 }
@@ -62,7 +83,7 @@ class PlaylistsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'FlutterDev Playlists',
+      title: 'Your Playlists',
       theme: FlexColorScheme.light(
         scheme: FlexScheme.red,
         useMaterial3: true,
@@ -71,7 +92,7 @@ class PlaylistsApp extends StatelessWidget {
         scheme: FlexScheme.red,
         useMaterial3: true,
       ).toTheme,
-      themeMode: ThemeMode.dark, // Or ThemeMode.System if you'd prefer
+      themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
     );

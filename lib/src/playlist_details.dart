@@ -3,6 +3,8 @@ import 'package:googleapis/youtube/v3.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/link.dart';
 
+import 'adaptive_image.dart';   // Add this line,
+import 'adaptive_text.dart';    // and this line
 import 'app_state.dart';
 
 class PlaylistDetails extends StatelessWidget {
@@ -13,7 +15,7 @@ class PlaylistDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FlutterDevPlaylists>(
+    return Consumer<AuthedUserPlaylists>(
       builder: (context, playlists, _) {
         final playlistItems = playlists.playlistItems(playlistId: playlistId);
         if (playlistItems.isEmpty) {
@@ -65,7 +67,8 @@ class _PlaylistDetailsListViewState extends State<_PlaylistDetailsListView> {
               alignment: Alignment.center,
               children: [
                 if (playlistItem.snippet!.thumbnails!.high != null)
-                  Image.network(playlistItem.snippet!.thumbnails!.high!.url!),
+                  AdaptiveImage.network(    // Modify this line
+                      playlistItem.snippet!.thumbnails!.high!.url!),
                 _buildGradient(context),
                 _buildTitleAndSubtitle(context, playlistItem),
                 _buildPlayButton(context, playlistItem),
@@ -82,7 +85,7 @@ class _PlaylistDetailsListViewState extends State<_PlaylistDetailsListView> {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.transparent, Theme.of(context).backgroundColor],
+            colors: [Colors.transparent, Theme.of(context).colorScheme.background],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: const [0.5, 0.95],
@@ -102,20 +105,20 @@ class _PlaylistDetailsListViewState extends State<_PlaylistDetailsListView> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AdaptiveText(    // This line
             playlistItem.snippet!.title!,
-            style: Theme.of(context).textTheme.bodyText1!.copyWith(
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                   fontSize: 18,
                   // fontWeight: FontWeight.bold,
                 ),
           ),
           if (playlistItem.snippet!.videoOwnerChannelTitle != null)
-            Text(
-              playlistItem.snippet!.videoOwnerChannelTitle!,
-              style: Theme.of(context).textTheme.bodyText2!.copyWith(
-                    fontSize: 12,
-                  ),
-            ),
+          AdaptiveText(    // And, this line
+            playlistItem.snippet!.videoOwnerChannelTitle!,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 12,
+                ),
+          ),
         ],
       ),
     );
